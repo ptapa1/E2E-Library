@@ -3,11 +3,9 @@
 
 #include "Platform_Types.h"
 
-
 #ifndef NULL
 #define NULL 0
 #endif
-
 
 typedef uint8 Std_ReturnType;
 

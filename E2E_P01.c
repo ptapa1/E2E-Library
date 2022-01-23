@@ -12,12 +12,12 @@ static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
 
     if ((Config->DataLength > MAX_P01_DATA_LENGTH_IN_BITS) || (Config->DataLength % 8 != 0)  ||
         (Config->CounterOffset % 4 != 0) || Config->CRCOffset % 8 != 0) {
-        return E2E_E_INPUTERR_WRONG; /* MISRA exception */
+        return E2E_E_INPUTERR_WRONG; 
     }
 
     if ((Config->CRCOffset + 8 > Config->DataLength) || (Config->CounterOffset + 4 > Config->DataLength) ||
         (Config->CRCOffset/8 == Config->CounterOffset/8)) {
-        return E2E_E_INPUTERR_WRONG; /* MISRA exception */
+        return E2E_E_INPUTERR_WRONG; 
     }
 
     return E2E_E_OK;
