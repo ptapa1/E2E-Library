@@ -31,13 +31,43 @@ void Test_Of_CalculateCrc(void)
         .MaxDeltaCounterInit = 1
     };
     uint8 data[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
-    uint8 counter = 0;
+    uint8 counter = 2;
+    uint8 call_count = 0;
     uint8 crc;
     Crc_CalculateCRC8_fake.return_val = 0x5;
     crc = CalculateCrc(&Config, counter, data);
-
-    TEST_CHECK(Crc_CalculateCRC8_fake.call_count == 3);
+    
+    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3 );
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[2] == 0x5);
     TEST_CHECK(crc == (5 ^ 0xFF));
+    call_count = Crc_CalculateCRC8_fake.call_count;
+
+    Config.DataIDMode = E2E_P01_DATAID_LOW;
+    crc = CalculateCrc(&Config, counter, data);
+    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+    TEST_CHECK(crc == (5 ^ 0xFF));
+    call_count = Crc_CalculateCRC8_fake.call_count;
+
+    Config.DataIDMode = E2E_P01_DATAID_ALT;
+    crc = CalculateCrc(&Config, counter, data);
+    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+    TEST_CHECK(crc == (5 ^ 0xFF));
+    call_count = Crc_CalculateCRC8_fake.call_count;
+
+    Config.DataIDMode = E2E_P01_DATAID_NIBBLE;
+    crc = CalculateCrc(&Config, counter, data);
+    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+    TEST_CHECK(crc == (5 ^ 0xFF));
+    call_count = Crc_CalculateCRC8_fake.call_count;
 }
 
 
