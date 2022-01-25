@@ -1,5 +1,6 @@
 #include "Std_Types.h"
 #include "E2E_P01.h"
+#include "E2E.h"
 
 #define MAX_P01_DATA_LENGTH_IN_BITS (240)
 #define MAX_P01_COUNTER_VALUE (14)
@@ -20,7 +21,7 @@ static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
         return E2E_E_INPUTERR_WRONG; 
     }
 
-    return E2E_E_OK;
+    return E_OK;
 	
 }
 
@@ -52,6 +53,15 @@ Std_ReturnType E2E_P01Protect(E2E_P01ConfigType* Config, E2E_P01SenderStateType*
         *(Data+(Config->CounterOffset/8)) = (*(Data+(Config->CounterOffset/8)) & 0x0F) | ((State->Counter<<4) & 0xF0);
     }
 
+    if(Config->DataIDMode == E2E_P01_DATAID_NIBBLE){
+        if(Config->DataIDNibbleOffset % 8 == 0){
+            *(Data+(Config->DataIDNibbleOffset/8)) = (*(Data+(Config->DataIDNibbleOffset/8)) & 0xF0) | ((Config->DataID>>8) & 0x0F);
+        }
+        else{
+            *(Data+(Config->DataIDNibbleOffset/8)) = (*(Data+(Config->DataIDNibbleOffset/8)) & 0x0F) | ((Config->DataID>>4) & 0xF0);
+        }
+    }
+   
     *(Data+(Config->CRCOffset/8)) = CalculateCrc(Config, State->Counter, Data);
 
     State->Counter = E2E_UpdateCounter(State->Counter);
@@ -63,6 +73,85 @@ uint8 E2E_UpdateCounter(uint8 Counter) {
     return (Counter+1) % 15; // profile 1 value
 }
 
-int main(){
-    return 0;
+static inline uint8 CalculateDeltaCounter(uint8 receivedCounter, uint8 lastValidCounter)
+{
+    if (receivedCounter >= lastValidCounter) {
+        return receivedCounter - lastValidCounter;
+    }
+    else {
+        return MAX_P01_COUNTER_VALUE + 1 + receivedCounter - lastValidCounter;
+    }
 }
+
+Std_ReturnType E2E_P01Check(E2E_P01ConfigType* Config, E2E_P01ReceiverStateType* State, uint8* Data) {
+
+    uint8 receivedCounter = 0;
+    uint8 receivedCrc = 0;
+    uint8 calculatedCrc = 0;
+    uint8 delta = 0;
+    Std_ReturnType returnValue = CheckConfig(Config);
+
+    if (E2E_E_OK != returnValue) {
+        return returnValue;
+    }
+
+    if ((State == NULL) || (Data == NULL)) {
+        return E2E_E_INPUTERR_NULL;
+    }
+
+    if (State->MaxDeltaCounter < MAX_P01_COUNTER_VALUE) {
+        State->MaxDeltaCounter++;
+    }
+
+    if (State->NewDataAvailable == FALSE) {
+        State->Status = E2E_P01STATUS_NONEWDATA;
+        return E2E_E_OK;  
+    }
+
+    if (Config->CounterOffset % 8 == 0) {
+        receivedCounter = *(Data+(Config->CounterOffset/8)) & 0x0F;
+    }
+    else {
+        receivedCounter = (*(Data+(Config->CounterOffset/8)) >> 4) & 0x0F;
+    }
+
+    receivedCrc = *(Data+(Config->CRCOffset/8));
+    calculatedCrc = CalculateCrc(Config, receivedCounter, Data);
+
+    if (receivedCrc != calculatedCrc) {
+        State->Status = E2E_P01STATUS_WRONGCRC;
+        return E2E_E_OK;
+    }
+
+    if (State->WaitForFirstData == TRUE) {
+        State->WaitForFirstData = FALSE;
+        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+        State->LastValidCounter = receivedCounter;
+        State->Status= E2E_P01STATUS_INITAL;
+        return E2E_E_OK;
+    }
+
+    delta = CalculateDeltaCounter(receivedCounter, State->LastValidCounter);
+
+    if (delta == 1) {
+        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+        State->LastValidCounter = receivedCounter;
+        State->LostData = 0;
+        State->Status= E2E_P01STATUS_OK;
+    }
+    else if (delta == 0) {
+        State->Status= E2E_P01STATUS_REPEATED;
+    }
+    else if (delta <= State->MaxDeltaCounter) {
+        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+        State->LastValidCounter = receivedCounter;
+        State->LostData = delta - 1;
+        State->Status= E2E_P01STATUS_OKSOMELOST;
+    }
+    else {
+        State->Status= E2E_P01STATUS_WRONGSEQUENCE;
+    }
+
+    return E2E_E_OK;
+}
+

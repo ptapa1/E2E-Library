@@ -1,11 +1,13 @@
 #ifndef E2E_P01_H_
 #define E2E_P01_H_
 
+#include "E2E.h"
 
 typedef enum {
     E2E_P01_DATAID_BOTH = 0x0,
     E2E_P01_DATAID_ALT = 0x1,
-    E2E_P01_DATAID_LOW = 0x2
+    E2E_P01_DATAID_LOW = 0x2,
+    E2E_P01_DATAID_NIBBLE = 0x3
 } E2E_P01DataIDMode;
 
 
@@ -13,6 +15,7 @@ typedef struct  {
     uint16 CounterOffset;
     uint16 CRCOffset;
     uint16 DataID;
+    uint16 DataIDNibbleOffset;
     E2E_P01DataIDMode DataIDMode;
     uint16 DataLength;
     uint8 MaxDeltaCounterInit;
@@ -22,6 +25,17 @@ typedef struct  {
 typedef struct {
     uint8 Counter;
 } E2E_P01SenderStateType;
+
+/*typedef enum {
+        E2E_P01STATUS_OK = 0x00,
+        E2E_P01STATUS_NONEWDATA = 0x1,
+        E2E_P01STATUS_WRONGCRC = 0x2,
+        E2E_P01STATUS_SYNC = 0x03,
+        E2E_P01STATUS_INITIAL = 0x4,
+        E2E_P01STATUS_REPEATED = 0x8,
+        E2E_P01STATUS_OKSOMELOST = 0x20,
+        E2E_P01STATUS_WRONGSEQUENCE = 0x40
+} E2E_P01CheckStatusType;*/
 
 
 typedef enum {
@@ -33,6 +47,19 @@ typedef enum {
         E2E_P01STATUS_OKSOMELOST = 0x20,
         E2E_P01STATUS_WRONGSEQUENCE = 0x40
 } E2E_P01ReceiverStatusType;
+
+typedef struct {
+    uint8 LastValidCounter;
+    uint8 MaxDeltaCounter;
+    boolean WaitForFirstData;
+    boolean NewDataAvailable;
+    uint8 LostData;
+    E2E_P01ReceiverStatusType Status;
+    uint8 SyncCounter;
+    uint8 NoNewOrRepeatedDataCounter;
+} E2E_P01CheckStateType;
+
+
 
 
 typedef struct {
