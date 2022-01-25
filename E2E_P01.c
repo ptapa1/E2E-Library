@@ -28,10 +28,50 @@ static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
 static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
 {
     uint8 crc = 0x00;
-    uint8 lowerByteId = (uint8)Config->DataID;
+    uint8 lowerByteId = (uint8)(Config->DataID);
     uint8 upperByteId = (uint8)(Config->DataID>>8);
-   
-    return 0;
+
+    /* Calculate CRC on the Data ID */
+    switch (Config->DataIDMode) 
+    {
+        case E2E_P01_DATAID_BOTH:
+            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+            crc = Crc_CalculateCRC8(&upperByteId, 1, crc, FALSE);
+            break;
+        case E2E_P01_DATAID_LOW:
+            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+            break;
+        case E2E_P01_DATAID_ALT:
+            if (Counter % 2 == 0)
+            {
+                crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+            }
+            else
+            {
+                crc = Crc_CalculateCRC8(&upperByteId, 1, 0xFF, FALSE);
+            }
+            break;
+        case E2E_P01_DATAID_NIBBLE:
+            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+            crc = Crc_CalculateCRC8(&upperByteId, 1, crc, FALSE);
+            break;
+        default:
+            break;
+    }
+
+    /* Calculate CRC on the data */
+    if (Config->CRCOffset >= 8) {
+        crc = Crc_CalculateCRC8 (Data, (Config->CRCOffset / 8), crc, FALSE);
+    }
+
+    if (Config->CRCOffset / 8 < (Config->DataLength / 8) - 1) {
+        crc = Crc_CalculateCRC8 (&Data[Config->CRCOffset/8 + 1],
+                                (Config->DataLength / 8 - Config->CRCOffset / 8 - 1),
+                                crc, FALSE);
+    }
+
+    return crc ^ 0xFF;
+
 }
 
 Std_ReturnType E2E_P01Protect(E2E_P01ConfigType* Config, E2E_P01SenderStateType* State, uint8* Data) {
