@@ -11,13 +11,14 @@
 
 #include "E2E_P01.c"
 
-
 DEFINE_FFF_GLOBALS;
 
 FAKE_VALUE_FUNC4(uint8, Crc_CalculateCRC8,const uint8*, uint32, uint8, boolean);
 
 /**
-  @brief Test obliczania crc
+  @brief Test funkcji CalculateCrc
+
+  Funkcja testująca obliczanie CRC.
 */
 void Test_Of_CalculateCrc(void)
 {
@@ -88,6 +89,9 @@ void Test_Of_CalculateCrc(void)
     call_count = Crc_CalculateCRC8_fake.call_count;
 }
 
+/**
+  @brief Test funkcji E2E_P01Protect
+*/
 void Test_of_E2E_P01Protect(void){
     Std_ReturnType retv;
     E2E_P01ConfigType Config;
@@ -130,6 +134,11 @@ void Test_of_E2E_P01Protect(void){
     TEST_CHECK(retv == E2E_E_OK);
 }
 
+/**
+  @brief Test funkcji CheckConfig
+
+  Funkcja testująca poprawność struktury zawierającej dane konfiguracyjne.
+*/
 void Test_of_CheckConfig(void){
     Std_ReturnType retv;
     E2E_P01ConfigType Config;
@@ -158,6 +167,11 @@ void Test_of_CheckConfig(void){
     TEST_CHECK(retv == E2E_E_INPUTERR_WRONG);
 }
 
+/**
+  @brief Test funkcji CalculateDeltaCounter
+
+  Funkcja testująca poprawność ustawień licznika.
+*/
 void Test_of_CalculateDeltaCounter(void){
     uint8 receivedCounter  = 0x5;
     uint8 lastValidCounter = 0x4;
@@ -174,6 +188,11 @@ void Test_of_CalculateDeltaCounter(void){
     
 }
 
+/**
+  @brief Test funkcji E2E_P01Check
+
+  Funkcja testująca kontrolę poprawności danych.
+*/
 void Test_of_E2E_P01Check(void){
     Std_ReturnType retv;
     E2E_P01ConfigType Config;
@@ -198,7 +217,6 @@ void Test_of_E2E_P01Check(void){
     };
     Data = 0;
 
-
     retv = E2E_P01Check(&Config, &State, &Data);
     TEST_CHECK(retv == E2E_E_OK);
 
@@ -215,12 +233,27 @@ void Test_of_E2E_P01Check(void){
 
     State.NewDataAvailable = 0x1;
     Config.CounterOffset = 12;
-    State.WaitForFirstData = 0x1;
+    State.WaitForFirstData = 0x0;
     retv = E2E_P01Check(&Config, &State, &Data);
     TEST_CHECK(retv == E2E_E_OK);
+
+    State.LastValidCounter = 0xF;
+    retv = E2E_P01Check(&Config, &State, &Data);
+    TEST_CHECK(retv == E2E_E_OK);
+
+    State.LastValidCounter = 0xE;
+    retv = E2E_P01Check(&Config, &State, &Data);
+    TEST_CHECK(retv == E2E_E_OK);
+
+    State.LastValidCounter = 0x1;
+    retv = E2E_P01Check(&Config, &State, &Data);
+    TEST_CHECK(retv == E2E_E_OK);
+
 }
 
-
+/**
+  @brief Lista testów
+*/
 TEST_LIST = {
     { "Test of CalculateCrc", Test_Of_CalculateCrc },
     { "Test of E2E_P01Protect", Test_of_E2E_P01Protect },
@@ -229,4 +262,3 @@ TEST_LIST = {
     { "Test of E2E_P01Check", Test_of_E2E_P01Check },/* Format to { "nazwa testu", nazwa_funkcji } */
     { NULL, NULL }                                      /* To musi być na końcu */
 };
-

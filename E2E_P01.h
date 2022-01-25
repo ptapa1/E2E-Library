@@ -10,7 +10,6 @@ typedef enum {
     E2E_P01_DATAID_NIBBLE = 0x3
 } E2E_P01DataIDMode;
 
-
 typedef struct  {
     uint16 CounterOffset;
     uint16 CRCOffset;
@@ -21,22 +20,9 @@ typedef struct  {
     uint8 MaxDeltaCounterInit;
 } E2E_P01ConfigType;
 
-
 typedef struct {
     uint8 Counter;
 } E2E_P01SenderStateType;
-
-/*typedef enum {
-        E2E_P01STATUS_OK = 0x00,
-        E2E_P01STATUS_NONEWDATA = 0x1,
-        E2E_P01STATUS_WRONGCRC = 0x2,
-        E2E_P01STATUS_SYNC = 0x03,
-        E2E_P01STATUS_INITIAL = 0x4,
-        E2E_P01STATUS_REPEATED = 0x8,
-        E2E_P01STATUS_OKSOMELOST = 0x20,
-        E2E_P01STATUS_WRONGSEQUENCE = 0x40
-} E2E_P01CheckStatusType;*/
-
 
 typedef enum {
         E2E_P01STATUS_OK = 0x0,
@@ -59,9 +45,6 @@ typedef struct {
     uint8 NoNewOrRepeatedDataCounter;
 } E2E_P01CheckStateType;
 
-
-
-
 typedef struct {
     uint8 LastValidCounter;
     uint8 MaxDeltaCounter;
@@ -70,7 +53,6 @@ typedef struct {
     uint8 LostData;
     E2E_P01ReceiverStatusType Status;
 } E2E_P01ReceiverStateType;
-
 
 Std_ReturnType E2E_P01Protect( E2E_P01ConfigType* Config, E2E_P01SenderStateType* State, uint8* Data);
 Std_ReturnType E2E_P01Check( E2E_P01ConfigType* Config, E2E_P01ReceiverStateType* State, uint8* Data);

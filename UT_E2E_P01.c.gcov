@@ -19,219 +19,258 @@
         -:   14:
         -:   15:DEFINE_FFF_GLOBALS;
         -:   16:
-       32:   17:FAKE_VALUE_FUNC4(uint8, Crc_CalculateCRC8,const uint8*, uint32, uint8, boolean);
+       38:   17:FAKE_VALUE_FUNC4(uint8, Crc_CalculateCRC8,const uint8*, uint32, uint8, boolean);
         -:   18:
-        -:   19:/**
-        -:   20:  @brief Test obliczania crc
-        -:   21:*/
-        1:   22:void Test_Of_CalculateCrc(void)
-        -:   23:{
-        -:   24:    E2E_P01ConfigType Config;
-        1:   25:    Config = (E2E_P01ConfigType){
-        -:   26:        .CounterOffset = 8,
-        -:   27:        .CRCOffset = 0,
-        -:   28:        .DataID = 0xA4,
-        -:   29:        .DataIDMode = E2E_P01_DATAID_BOTH,
-        -:   30:        .DataLength = 64,
-        -:   31:        .MaxDeltaCounterInit = 1
-        -:   32:    };
-        1:   33:    uint8 data[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
-        1:   34:    uint8 counter = 2;
-        1:   35:    uint8 call_count = 0;
-        -:   36:    uint8 crc;
-        1:   37:    Crc_CalculateCRC8_fake.return_val = 0x5;
-        1:   38:    crc = CalculateCrc(&Config, counter, data);
-        -:   39:    
-        1:   40:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3 );
-        1:   41:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   42:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   43:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[2] == 0x5);
-        1:   44:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   45:    call_count = Crc_CalculateCRC8_fake.call_count;
-        -:   46:
-        1:   47:    Config.DataIDMode = E2E_P01_DATAID_LOW;
-        1:   48:    crc = CalculateCrc(&Config, counter, data);
-        1:   49:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
-        1:   50:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   51:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   52:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   53:    call_count = Crc_CalculateCRC8_fake.call_count;
-        -:   54:
-        1:   55:    Config.DataIDMode = E2E_P01_DATAID_ALT;
-        1:   56:    crc = CalculateCrc(&Config, counter, data);
-        1:   57:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
-        1:   58:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   59:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   60:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   61:    call_count = Crc_CalculateCRC8_fake.call_count;
-        -:   62:
-        1:   63:    Config.DataIDMode = E2E_P01_DATAID_NIBBLE;
-        1:   64:    crc = CalculateCrc(&Config, counter, data);
-        1:   65:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3);
-        1:   66:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   67:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   68:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   69:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   70:    call_count = Crc_CalculateCRC8_fake.call_count;
-        -:   71:
-        1:   72:    Config.DataIDMode = E2E_P01_DATAID_ALT;
-        1:   73:    counter = 3;
-        1:   74:    crc = CalculateCrc(&Config, counter, data);
-        1:   75:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
-        1:   76:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   77:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   78:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   79:    call_count = Crc_CalculateCRC8_fake.call_count;
-        -:   80:
-        1:   81:    Config.DataIDMode = E2E_P01_DATAID_ALT;
-        1:   82:    Config.CRCOffset = 100;
-        1:   83:    crc = CalculateCrc(&Config, counter, data);
-        1:   84:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
-        1:   85:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
-        1:   86:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
-        1:   87:    TEST_CHECK(crc == (5 ^ 0xFF));
-        1:   88:    call_count = Crc_CalculateCRC8_fake.call_count;
-        1:   89:}
-        -:   90:
-        1:   91:void Test_of_E2E_P01Protect(void){
-        -:   92:    Std_ReturnType retv;
-        -:   93:    E2E_P01ConfigType Config;
-        -:   94:    E2E_P01SenderStateType State;
-        -:   95:    uint8 Data;
-        1:   96:    Config = (E2E_P01ConfigType){
-        -:   97:        .CounterOffset = 8,
-        -:   98:        .CRCOffset = 0,
-        -:   99:        .DataID = 0xA4,
-        -:  100:        .DataIDNibbleOffset = 12,
-        -:  101:        .DataIDMode = E2E_P01_DATAID_BOTH,
-        -:  102:        .DataLength = 64,
-        -:  103:        .MaxDeltaCounterInit = 1
-        -:  104:    };
-        1:  105:    State = (E2E_P01SenderStateType){
-        -:  106:        .Counter = 0
-        -:  107:    };
-        1:  108:    Data = 0;
-        -:  109:
-        1:  110:    retv = E2E_P01Protect(&Config, &State, &Data);
-        1:  111:    TEST_CHECK(retv == E2E_E_OK);
-        -:  112:
-        1:  113:    retv = E2E_P01Protect(&Config, &State, NULL);
-        1:  114:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
-        -:  115:
-        1:  116:    retv = E2E_P01Protect(NULL, &State, &Data);
-        1:  117:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
-        -:  118:
-        1:  119:    Config.CounterOffset = 12;
-        1:  120:    retv = E2E_P01Protect(&Config, &State, &Data);
-        1:  121:    TEST_CHECK(retv == E2E_E_OK);
+        -:   19:
+        -:   20:/**
+        -:   21:  @brief Test funkcji CalculateCrc
+        -:   22:
+        -:   23:  Funkcja testująca obliczanie CRC.
+        -:   24:*/
+        1:   25:void Test_Of_CalculateCrc(void)
+        -:   26:{
+        -:   27:    E2E_P01ConfigType Config;
+        1:   28:    Config = (E2E_P01ConfigType){
+        -:   29:        .CounterOffset = 8,
+        -:   30:        .CRCOffset = 0,
+        -:   31:        .DataID = 0xA4,
+        -:   32:        .DataIDMode = E2E_P01_DATAID_BOTH,
+        -:   33:        .DataLength = 64,
+        -:   34:        .MaxDeltaCounterInit = 1
+        -:   35:    };
+        1:   36:    uint8 data[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
+        1:   37:    uint8 counter = 2;
+        1:   38:    uint8 call_count = 0;
+        -:   39:    uint8 crc;
+        1:   40:    Crc_CalculateCRC8_fake.return_val = 0x5;
+        1:   41:    crc = CalculateCrc(&Config, counter, data);
+        -:   42:    
+        1:   43:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3 );
+        1:   44:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   45:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   46:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[2] == 0x5);
+        1:   47:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   48:    call_count = Crc_CalculateCRC8_fake.call_count;
+        -:   49:
+        1:   50:    Config.DataIDMode = E2E_P01_DATAID_LOW;
+        1:   51:    crc = CalculateCrc(&Config, counter, data);
+        1:   52:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+        1:   53:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   54:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   55:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   56:    call_count = Crc_CalculateCRC8_fake.call_count;
+        -:   57:
+        1:   58:    Config.DataIDMode = E2E_P01_DATAID_ALT;
+        1:   59:    crc = CalculateCrc(&Config, counter, data);
+        1:   60:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+        1:   61:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   62:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   63:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   64:    call_count = Crc_CalculateCRC8_fake.call_count;
+        -:   65:
+        1:   66:    Config.DataIDMode = E2E_P01_DATAID_NIBBLE;
+        1:   67:    crc = CalculateCrc(&Config, counter, data);
+        1:   68:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 3);
+        1:   69:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   70:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   71:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   72:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   73:    call_count = Crc_CalculateCRC8_fake.call_count;
+        -:   74:
+        1:   75:    Config.DataIDMode = E2E_P01_DATAID_ALT;
+        1:   76:    counter = 3;
+        1:   77:    crc = CalculateCrc(&Config, counter, data);
+        1:   78:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+        1:   79:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   80:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   81:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   82:    call_count = Crc_CalculateCRC8_fake.call_count;
+        -:   83:
+        1:   84:    Config.DataIDMode = E2E_P01_DATAID_ALT;
+        1:   85:    Config.CRCOffset = 100;
+        1:   86:    crc = CalculateCrc(&Config, counter, data);
+        1:   87:    TEST_CHECK((Crc_CalculateCRC8_fake.call_count - call_count) == 2);
+        1:   88:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[0] == 0xFF);
+        1:   89:    TEST_CHECK(Crc_CalculateCRC8_fake.arg2_history[1] == 0x5);
+        1:   90:    TEST_CHECK(crc == (5 ^ 0xFF));
+        1:   91:    call_count = Crc_CalculateCRC8_fake.call_count;
+        1:   92:}
+        -:   93:
+        -:   94:
+        -:   95:/**
+        -:   96:  @brief Test funkcji E2E_P01Protect
+        -:   97:*/
+        1:   98:void Test_of_E2E_P01Protect(void){
+        -:   99:    Std_ReturnType retv;
+        -:  100:    E2E_P01ConfigType Config;
+        -:  101:    E2E_P01SenderStateType State;
+        -:  102:    uint8 Data;
+        1:  103:    Config = (E2E_P01ConfigType){
+        -:  104:        .CounterOffset = 8,
+        -:  105:        .CRCOffset = 0,
+        -:  106:        .DataID = 0xA4,
+        -:  107:        .DataIDNibbleOffset = 12,
+        -:  108:        .DataIDMode = E2E_P01_DATAID_BOTH,
+        -:  109:        .DataLength = 64,
+        -:  110:        .MaxDeltaCounterInit = 1
+        -:  111:    };
+        1:  112:    State = (E2E_P01SenderStateType){
+        -:  113:        .Counter = 0
+        -:  114:    };
+        1:  115:    Data = 0;
+        -:  116:
+        1:  117:    retv = E2E_P01Protect(&Config, &State, &Data);
+        1:  118:    TEST_CHECK(retv == E2E_E_OK);
+        -:  119:
+        1:  120:    retv = E2E_P01Protect(&Config, &State, NULL);
+        1:  121:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
         -:  122:
-        1:  123:    Config.CounterOffset = 8;
-        1:  124:    Config.DataIDMode = E2E_P01_DATAID_NIBBLE;
-        1:  125:    retv = E2E_P01Protect(&Config, &State, &Data);
-        1:  126:    TEST_CHECK(retv == E2E_E_OK);
-        -:  127:
-        1:  128:    Config.DataIDNibbleOffset = 16;
-        1:  129:    retv = E2E_P01Protect(&Config, &State, &Data);
-        1:  130:    TEST_CHECK(retv == E2E_E_OK);
-        1:  131:}
-        -:  132:
-        1:  133:void Test_of_CheckConfig(void){
-        -:  134:    Std_ReturnType retv;
-        -:  135:    E2E_P01ConfigType Config;
-        1:  136:    Config = (E2E_P01ConfigType){
-        -:  137:        .CounterOffset = 8,
-        -:  138:        .CRCOffset = 0,
-        -:  139:        .DataID = 0xA4,
-        -:  140:        .DataIDNibbleOffset = 12,
-        -:  141:        .DataIDMode = E2E_P01_DATAID_BOTH,
-        -:  142:        .DataLength = 64,
-        -:  143:        .MaxDeltaCounterInit = 1
-        -:  144:    };
-        1:  145:    retv = CheckConfig(&Config);
-        1:  146:    TEST_CHECK(retv == E2E_E_OK);
-        -:  147:
-        1:  148:    retv = CheckConfig(NULL);
-        1:  149:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
-        -:  150:
-        1:  151:    Config.DataLength = 65;
-        1:  152:    retv = CheckConfig(&Config);
-        1:  153:    TEST_CHECK(retv == E2E_E_INPUTERR_WRONG);
-        -:  154:
-        1:  155:    Config.DataLength = 64;
-        1:  156:    Config.CRCOffset = 64;
-        1:  157:    retv = CheckConfig(&Config);
-        1:  158:    TEST_CHECK(retv == E2E_E_INPUTERR_WRONG);
-        1:  159:}
+        1:  123:    retv = E2E_P01Protect(NULL, &State, &Data);
+        1:  124:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
+        -:  125:
+        1:  126:    Config.CounterOffset = 12;
+        1:  127:    retv = E2E_P01Protect(&Config, &State, &Data);
+        1:  128:    TEST_CHECK(retv == E2E_E_OK);
+        -:  129:
+        1:  130:    Config.CounterOffset = 8;
+        1:  131:    Config.DataIDMode = E2E_P01_DATAID_NIBBLE;
+        1:  132:    retv = E2E_P01Protect(&Config, &State, &Data);
+        1:  133:    TEST_CHECK(retv == E2E_E_OK);
+        -:  134:
+        1:  135:    Config.DataIDNibbleOffset = 16;
+        1:  136:    retv = E2E_P01Protect(&Config, &State, &Data);
+        1:  137:    TEST_CHECK(retv == E2E_E_OK);
+        1:  138:}
+        -:  139:
+        -:  140:
+        -:  141:/**
+        -:  142:  @brief Test funkcji CheckConfig
+        -:  143:
+        -:  144:  Funkcja testująca poprawność struktury zawierającej dane konfiguracyjne.
+        -:  145:*/
+        1:  146:void Test_of_CheckConfig(void){
+        -:  147:    Std_ReturnType retv;
+        -:  148:    E2E_P01ConfigType Config;
+        1:  149:    Config = (E2E_P01ConfigType){
+        -:  150:        .CounterOffset = 8,
+        -:  151:        .CRCOffset = 0,
+        -:  152:        .DataID = 0xA4,
+        -:  153:        .DataIDNibbleOffset = 12,
+        -:  154:        .DataIDMode = E2E_P01_DATAID_BOTH,
+        -:  155:        .DataLength = 64,
+        -:  156:        .MaxDeltaCounterInit = 1
+        -:  157:    };
+        1:  158:    retv = CheckConfig(&Config);
+        1:  159:    TEST_CHECK(retv == E2E_E_OK);
         -:  160:
-        1:  161:void Test_of_CalculateDeltaCounter(void){
-        1:  162:    uint8 receivedCounter  = 0x5;
-        1:  163:    uint8 lastValidCounter = 0x4;
-        -:  164:    uint8 retv;
-        -:  165:
-        1:  166:    retv = CalculateDeltaCounter(receivedCounter, lastValidCounter);
-        1:  167:    TEST_CHECK(retv == receivedCounter - lastValidCounter);
-        -:  168:
-        1:  169:    receivedCounter  = 0x4;
-        1:  170:    lastValidCounter = 0x5;
-        -:  171:
-        1:  172:    retv = CalculateDeltaCounter(receivedCounter, lastValidCounter);
-        1:  173:    TEST_CHECK(retv == MAX_P01_COUNTER_VALUE + 1 + receivedCounter - lastValidCounter);
-        -:  174:    
-        1:  175:}
-        -:  176:
-        1:  177:void Test_of_E2E_P01Check(void){
-        -:  178:    Std_ReturnType retv;
-        -:  179:    E2E_P01ConfigType Config;
-        -:  180:    E2E_P01ReceiverStateType State;
-        -:  181:    uint8 Data;
-        1:  182:    Config = (E2E_P01ConfigType){
-        -:  183:        .CounterOffset = 8,
-        -:  184:        .CRCOffset = 0,
-        -:  185:        .DataID = 0xA4,
-        -:  186:        .DataIDNibbleOffset = 12,
-        -:  187:        .DataIDMode = E2E_P01_DATAID_BOTH,
-        -:  188:        .DataLength = 64,
-        -:  189:        .MaxDeltaCounterInit = 1
-        -:  190:    };
-        1:  191:    State = (E2E_P01ReceiverStateType){
-        -:  192:        .LastValidCounter = 0x5,
-        -:  193:        .MaxDeltaCounter  = 0xE,
-        -:  194:        .WaitForFirstData = 0x1,
-        -:  195:        .NewDataAvailable = 0x1,
-        -:  196:        .LostData         = 0x0,
-        -:  197:        .Status           = E2E_P01STATUS_OK
-        -:  198:    };
-        1:  199:    Data = 0;
-        -:  200:
-        -:  201:
-        1:  202:    retv = E2E_P01Check(&Config, &State, &Data);
-        1:  203:    TEST_CHECK(retv == E2E_E_OK);
-        -:  204:
-        1:  205:    retv = E2E_P01Check(&Config, &State, NULL);
-        1:  206:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
-        -:  207:
-        1:  208:    retv = E2E_P01Check(NULL, &State, &Data);
-        1:  209:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
-        -:  210:
-        1:  211:    State.NewDataAvailable = 0x0;
-        1:  212:    State.MaxDeltaCounter = 0xA;
-        1:  213:    retv = E2E_P01Check(&Config, &State, &Data);
-        1:  214:    TEST_CHECK(retv == E2E_E_OK);
-        -:  215:
-        1:  216:    State.NewDataAvailable = 0x1;
-        1:  217:    Config.CounterOffset = 12;
-        1:  218:    State.WaitForFirstData = 0x1;
-        1:  219:    retv = E2E_P01Check(&Config, &State, &Data);
-        1:  220:    TEST_CHECK(retv == E2E_E_OK);
-        1:  221:}
-        -:  222:
-        -:  223:
-        -:  224:TEST_LIST = {
-        -:  225:    { "Test of CalculateCrc", Test_Of_CalculateCrc },
-        -:  226:    { "Test of E2E_P01Protect", Test_of_E2E_P01Protect },
-        -:  227:    { "Test of CheckConfig", Test_of_CheckConfig },
-        -:  228:    { "Test of CalculateDeltaCounter", Test_of_CalculateDeltaCounter },
-        -:  229:    { "Test of E2E_P01Check", Test_of_E2E_P01Check },/* Format to { "nazwa testu", nazwa_funkcji } */
-        -:  230:    { NULL, NULL }                                      /* To musi być na końcu */
-        -:  231:};
-        -:  232:
+        1:  161:    retv = CheckConfig(NULL);
+        1:  162:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
+        -:  163:
+        1:  164:    Config.DataLength = 65;
+        1:  165:    retv = CheckConfig(&Config);
+        1:  166:    TEST_CHECK(retv == E2E_E_INPUTERR_WRONG);
+        -:  167:
+        1:  168:    Config.DataLength = 64;
+        1:  169:    Config.CRCOffset = 64;
+        1:  170:    retv = CheckConfig(&Config);
+        1:  171:    TEST_CHECK(retv == E2E_E_INPUTERR_WRONG);
+        1:  172:}
+        -:  173:
+        -:  174:
+        -:  175:/**
+        -:  176:  @brief Test funkcji CalculateDeltaCounter
+        -:  177:
+        -:  178:  Funkcja testująca poprawność ustawień licznika.
+        -:  179:*/
+        1:  180:void Test_of_CalculateDeltaCounter(void){
+        1:  181:    uint8 receivedCounter  = 0x5;
+        1:  182:    uint8 lastValidCounter = 0x4;
+        -:  183:    uint8 retv;
+        -:  184:
+        1:  185:    retv = CalculateDeltaCounter(receivedCounter, lastValidCounter);
+        1:  186:    TEST_CHECK(retv == receivedCounter - lastValidCounter);
+        -:  187:
+        1:  188:    receivedCounter  = 0x4;
+        1:  189:    lastValidCounter = 0x5;
+        -:  190:
+        1:  191:    retv = CalculateDeltaCounter(receivedCounter, lastValidCounter);
+        1:  192:    TEST_CHECK(retv == MAX_P01_COUNTER_VALUE + 1 + receivedCounter - lastValidCounter);
+        -:  193:    
+        1:  194:}
+        -:  195:
+        -:  196:
+        -:  197:/**
+        -:  198:  @brief Test funkcji E2E_P01Check
+        -:  199:
+        -:  200:  Funkcja testująca kontrolę poprawności danych.
+        -:  201:*/
+        1:  202:void Test_of_E2E_P01Check(void){
+        -:  203:    Std_ReturnType retv;
+        -:  204:    E2E_P01ConfigType Config;
+        -:  205:    E2E_P01ReceiverStateType State;
+        -:  206:    uint8 Data;
+        1:  207:    Config = (E2E_P01ConfigType){
+        -:  208:        .CounterOffset = 8,
+        -:  209:        .CRCOffset = 0,
+        -:  210:        .DataID = 0xA4,
+        -:  211:        .DataIDNibbleOffset = 12,
+        -:  212:        .DataIDMode = E2E_P01_DATAID_BOTH,
+        -:  213:        .DataLength = 64,
+        -:  214:        .MaxDeltaCounterInit = 1
+        -:  215:    };
+        1:  216:    State = (E2E_P01ReceiverStateType){
+        -:  217:        .LastValidCounter = 0x5,
+        -:  218:        .MaxDeltaCounter  = 0xE,
+        -:  219:        .WaitForFirstData = 0x1,
+        -:  220:        .NewDataAvailable = 0x1,
+        -:  221:        .LostData         = 0x0,
+        -:  222:        .Status           = E2E_P01STATUS_OK
+        -:  223:    };
+        1:  224:    Data = 0;
+        -:  225:
+        1:  226:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  227:    TEST_CHECK(retv == E2E_E_OK);
+        -:  228:
+        1:  229:    retv = E2E_P01Check(&Config, &State, NULL);
+        1:  230:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
+        -:  231:
+        1:  232:    retv = E2E_P01Check(NULL, &State, &Data);
+        1:  233:    TEST_CHECK(retv == E2E_E_INPUTERR_NULL);
+        -:  234:
+        1:  235:    State.NewDataAvailable = 0x0;
+        1:  236:    State.MaxDeltaCounter = 0xA;
+        1:  237:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  238:    TEST_CHECK(retv == E2E_E_OK);
+        -:  239:
+        1:  240:    State.NewDataAvailable = 0x1;
+        1:  241:    Config.CounterOffset = 12;
+        1:  242:    State.WaitForFirstData = 0x0;
+        1:  243:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  244:    TEST_CHECK(retv == E2E_E_OK);
+        -:  245:
+        1:  246:    State.LastValidCounter = 0xF;
+        1:  247:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  248:    TEST_CHECK(retv == E2E_E_OK);
+        -:  249:
+        1:  250:    State.LastValidCounter = 0xE;
+        1:  251:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  252:    TEST_CHECK(retv == E2E_E_OK);
+        -:  253:
+        1:  254:    State.LastValidCounter = 0x1;
+        1:  255:    retv = E2E_P01Check(&Config, &State, &Data);
+        1:  256:    TEST_CHECK(retv == E2E_E_OK);
+        -:  257:
+        1:  258:}
+        -:  259:
+        -:  260:/**
+        -:  261:  @brief Lista testów
+        -:  262:*/
+        -:  263:TEST_LIST = {
+        -:  264:    { "Test of CalculateCrc", Test_Of_CalculateCrc },
+        -:  265:    { "Test of E2E_P01Protect", Test_of_E2E_P01Protect },
+        -:  266:    { "Test of CheckConfig", Test_of_CheckConfig },
+        -:  267:    { "Test of CalculateDeltaCounter", Test_of_CalculateDeltaCounter },
+        -:  268:    { "Test of E2E_P01Check", Test_of_E2E_P01Check },/* Format to { "nazwa testu", nazwa_funkcji } */
+        -:  269:    { NULL, NULL }                                      /* To musi być na końcu */
+        -:  270:};
+        -:  271:

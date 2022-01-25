@@ -656,16 +656,16 @@
     #####:  651:}
         -:  652:
         -:  653:int TEST_ATTRIBUTE_(format (printf, 4, 5))
-       43:  654:test_check_(int cond, const char* file, int line, const char* fmt, ...)
+       46:  654:test_check_(int cond, const char* file, int line, const char* fmt, ...)
         -:  655:{
         -:  656:    const char *result_str;
         -:  657:    int result_color;
         -:  658:    int verbose_level;
         -:  659:
-       43:  660:    if(cond) {
-       43:  661:        result_str = "ok";
-       43:  662:        result_color = TEST_COLOR_GREEN_;
-       43:  663:        verbose_level = 3;
+       46:  660:    if(cond) {
+       46:  661:        result_str = "ok";
+       46:  662:        result_color = TEST_COLOR_GREEN_;
+       46:  663:        verbose_level = 3;
         -:  664:    } else {
     #####:  665:        if(!test_current_already_logged_  &&  test_current_unit_ != NULL)
     #####:  666:            test_finish_test_line_(-1);
@@ -677,7 +677,7 @@
     #####:  672:        test_current_already_logged_++;
         -:  673:    }
         -:  674:
-       43:  675:    if(test_verbose_level_ >= verbose_level) {
+       46:  675:    if(test_verbose_level_ >= verbose_level) {
         -:  676:        va_list args;
         -:  677:
     #####:  678:        if(!test_case_current_already_logged_  &&  test_case_name_[0]) {
@@ -715,8 +715,8 @@
     #####:  710:        test_current_already_logged_++;
         -:  711:    }
         -:  712:
-       43:  713:    test_cond_failed_ = (cond == 0);
-       43:  714:    return !test_cond_failed_;
+       46:  713:    test_cond_failed_ = (cond == 0);
+       46:  714:    return !test_cond_failed_;
         -:  715:}
         -:  716:
         -:  717:void TEST_ATTRIBUTE_(format (printf, 1, 2))

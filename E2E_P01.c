@@ -5,6 +5,12 @@
 #define MAX_P01_DATA_LENGTH_IN_BITS (240)
 #define MAX_P01_COUNTER_VALUE (14)
 
+/**
+@brief CheckConfig
+
+
+Kontrola poprawnoœci struktury zawieraj¹cej dane konfiguracyjne.
+*/
 static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
 
     if (Config == NULL) {
@@ -25,6 +31,12 @@ static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
 	
 }
 
+/**
+@brief Obliczanie CRC
+
+
+Funkcja realizuj¹ca algorytm obliczaj¹cy kod CRC dla danych wejœciowych.
+*/
 static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
 {
     uint8 crc = 0x00;
@@ -55,8 +67,6 @@ static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
             crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
             crc = Crc_CalculateCRC8(&upperByteId, 1, crc, FALSE);
             break;
-        default:
-            break;
     }
 
     /* Calculate CRC on the data */
@@ -74,6 +84,12 @@ static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
 
 }
 
+/**
+@brief Protect
+
+
+Funkcja realizuj¹ca algorytm Protect biblioteki E2E profilu 1.
+*/
 Std_ReturnType E2E_P01Protect(E2E_P01ConfigType* Config, E2E_P01SenderStateType* State, uint8* Data) {
 
     Std_ReturnType returnValue = CheckConfig(Config);
@@ -109,10 +125,22 @@ Std_ReturnType E2E_P01Protect(E2E_P01ConfigType* Config, E2E_P01SenderStateType*
     return E2E_E_OK;
 }
 
+/**
+@brief Aktualizacja licznika
+
+
+Funkcja aktualizuj¹ca licznik stosowany w funkcji E2E_P01Protect.
+*/
 uint8 E2E_UpdateCounter(uint8 Counter) {
     return (Counter+1) % 15; // profile 1 value
 }
 
+/**
+@brief Kontrola licznika
+
+
+Funkcja obliczaj¹ca ró¿nicê miêdzy ostatni¹ poprawn¹ wartoœci¹ licznika a wartoœci¹ przychodz¹c¹.
+*/
 static inline uint8 CalculateDeltaCounter(uint8 receivedCounter, uint8 lastValidCounter)
 {
     if (receivedCounter >= lastValidCounter) {
@@ -123,6 +151,12 @@ static inline uint8 CalculateDeltaCounter(uint8 receivedCounter, uint8 lastValid
     }
 }
 
+/**
+@brief Check
+
+
+Funkcja realizuj¹ca algorytm Check biblioteki E2E profilu 1.
+*/
 Std_ReturnType E2E_P01Check(E2E_P01ConfigType* Config, E2E_P01ReceiverStateType* State, uint8* Data) {
 
     uint8 receivedCounter = 0;
@@ -155,14 +189,6 @@ Std_ReturnType E2E_P01Check(E2E_P01ConfigType* Config, E2E_P01ReceiverStateType*
         receivedCounter = (*(Data+(Config->CounterOffset/8)) >> 4) & 0x0F;
     }
 
-    receivedCrc = *(Data+(Config->CRCOffset/8));
-    calculatedCrc = CalculateCrc(Config, receivedCounter, Data);
-
-    if (receivedCrc != calculatedCrc) {
-        State->Status = E2E_P01STATUS_WRONGCRC;
-        return E2E_E_OK;
-    }
-
     if (State->WaitForFirstData == TRUE) {
         State->WaitForFirstData = FALSE;
         State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
@@ -192,6 +218,12 @@ Std_ReturnType E2E_P01Check(E2E_P01ConfigType* Config, E2E_P01ReceiverStateType*
         State->Status= E2E_P01STATUS_WRONGSEQUENCE;
     }
 
+    receivedCrc = *(Data+(Config->CRCOffset/8));
+    calculatedCrc = CalculateCrc(Config, receivedCounter, Data);
+
+    if (receivedCrc != calculatedCrc) {
+        State->Status = E2E_P01STATUS_WRONGCRC;
+    }
+
     return E2E_E_OK;
 }
-
