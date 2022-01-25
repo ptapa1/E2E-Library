@@ -61,11 +61,11 @@ static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
 
     /* Calculate CRC on the data */
     if (Config->CRCOffset >= 8) {
-        crc = Crc_CalculateCRC8 (Data, (Config->CRCOffset / 8), crc, FALSE);
+        crc = Crc_CalculateCRC8(Data, (Config->CRCOffset / 8), crc, FALSE);
     }
 
     if (Config->CRCOffset / 8 < (Config->DataLength / 8) - 1) {
-        crc = Crc_CalculateCRC8 (&Data[Config->CRCOffset/8 + 1],
+        crc = Crc_CalculateCRC8(&Data[Config->CRCOffset/8 + 1],
                                 (Config->DataLength / 8 - Config->CRCOffset / 8 - 1),
                                 crc, FALSE);
     }

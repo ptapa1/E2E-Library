@@ -1,0 +1,203 @@
+        -:    0:Source:E2E_P01.c
+        -:    0:Graph:UT_E2E_P01.gcno
+        -:    0:Data:UT_E2E_P01.gcda
+        -:    0:Runs:6
+        -:    0:Programs:1
+        -:    0:Source is newer than graph
+        -:    1:#include "Std_Types.h"
+        -:    2:#include "E2E_P01.h"
+        -:    3:#include "E2E.h"
+        -:    4:
+        -:    5:#define MAX_P01_DATA_LENGTH_IN_BITS (240)
+        -:    6:#define MAX_P01_COUNTER_VALUE (14)
+        -:    7:
+       15:    8:static inline Std_ReturnType CheckConfig(E2E_P01ConfigType* Config) {
+        -:    9:
+       15:   10:    if (Config == NULL) {
+        3:   11:        return E2E_E_INPUTERR_NULL; 
+        -:   12:    }
+        -:   13:
+       23:   14:    if ((Config->DataLength > MAX_P01_DATA_LENGTH_IN_BITS) || (Config->DataLength % 8 != 0)  ||
+       22:   15:        (Config->CounterOffset % 4 != 0) || Config->CRCOffset % 8 != 0) {
+        1:   16:        return E2E_E_INPUTERR_WRONG; 
+        -:   17:    }
+        -:   18:
+       21:   19:    if ((Config->CRCOffset + 8 > Config->DataLength) || (Config->CounterOffset + 4 > Config->DataLength) ||
+       10:   20:        (Config->CRCOffset/8 == Config->CounterOffset/8)) {
+        1:   21:        return E2E_E_INPUTERR_WRONG; 
+        -:   22:    }
+        -:   23:
+       10:   24:    return E_OK;
+        -:   25:	
+        -:   26:}
+        -:   27:
+       12:   28:static uint8 CalculateCrc(E2E_P01ConfigType* Config, uint8 Counter, uint8* Data)
+        -:   29:{
+       12:   30:    uint8 crc = 0x00;
+       12:   31:    uint8 lowerByteId = (uint8)(Config->DataID);
+       12:   32:    uint8 upperByteId = (uint8)(Config->DataID>>8);
+        -:   33:
+        -:   34:    /* Calculate CRC on the Data ID */
+       12:   35:    switch (Config->DataIDMode) 
+        -:   36:    {
+        -:   37:        case E2E_P01_DATAID_BOTH:
+        5:   38:            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+        5:   39:            crc = Crc_CalculateCRC8(&upperByteId, 1, crc, FALSE);
+        5:   40:            break;
+        -:   41:        case E2E_P01_DATAID_LOW:
+        1:   42:            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+        1:   43:            break;
+        -:   44:        case E2E_P01_DATAID_ALT:
+        3:   45:            if (Counter % 2 == 0)
+        -:   46:            {
+        1:   47:                crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+        -:   48:            }
+        -:   49:            else
+        -:   50:            {
+        2:   51:                crc = Crc_CalculateCRC8(&upperByteId, 1, 0xFF, FALSE);
+        -:   52:            }
+        3:   53:            break;
+        -:   54:        case E2E_P01_DATAID_NIBBLE:
+        3:   55:            crc = Crc_CalculateCRC8(&lowerByteId, 1, 0xFF, FALSE);
+        3:   56:            crc = Crc_CalculateCRC8(&upperByteId, 1, crc, FALSE);
+        3:   57:            break;
+        -:   58:        default:
+    #####:   59:            break;
+        -:   60:    }
+        -:   61:
+        -:   62:    /* Calculate CRC on the data */
+       12:   63:    if (Config->CRCOffset >= 8) {
+        1:   64:        crc = Crc_CalculateCRC8(Data, (Config->CRCOffset / 8), crc, FALSE);
+        -:   65:    }
+        -:   66:
+       12:   67:    if (Config->CRCOffset / 8 < (Config->DataLength / 8) - 1) {
+       22:   68:        crc = Crc_CalculateCRC8(&Data[Config->CRCOffset/8 + 1],
+       11:   69:                                (Config->DataLength / 8 - Config->CRCOffset / 8 - 1),
+        -:   70:                                crc, FALSE);
+        -:   71:    }
+        -:   72:
+       12:   73:    return crc ^ 0xFF;
+        -:   74:
+        -:   75:}
+        -:   76:
+        6:   77:Std_ReturnType E2E_P01Protect(E2E_P01ConfigType* Config, E2E_P01SenderStateType* State, uint8* Data) {
+        -:   78:
+        6:   79:    Std_ReturnType returnValue = CheckConfig(Config);
+        -:   80:
+        6:   81:    if (E2E_E_OK != returnValue) {
+        1:   82:        return returnValue;
+        -:   83:    }
+        -:   84:
+        5:   85:    if ((State == NULL) || (Data == NULL)) {
+        1:   86:        return E2E_E_INPUTERR_NULL;
+        -:   87:    }
+        -:   88:
+        4:   89:    if (Config->CounterOffset % 8 == 0) {
+        3:   90:        *(Data+(Config->CounterOffset/8)) = (*(Data+(Config->CounterOffset/8)) & 0xF0) | (State->Counter & 0x0F);
+        -:   91:    }
+        -:   92:    else {
+        1:   93:        *(Data+(Config->CounterOffset/8)) = (*(Data+(Config->CounterOffset/8)) & 0x0F) | ((State->Counter<<4) & 0xF0);
+        -:   94:    }
+        -:   95:
+        4:   96:    if(Config->DataIDMode == E2E_P01_DATAID_NIBBLE){
+        2:   97:        if(Config->DataIDNibbleOffset % 8 == 0){
+        1:   98:            *(Data+(Config->DataIDNibbleOffset/8)) = (*(Data+(Config->DataIDNibbleOffset/8)) & 0xF0) | ((Config->DataID>>8) & 0x0F);
+        -:   99:        }
+        -:  100:        else{
+        1:  101:            *(Data+(Config->DataIDNibbleOffset/8)) = (*(Data+(Config->DataIDNibbleOffset/8)) & 0x0F) | ((Config->DataID>>4) & 0xF0);
+        -:  102:        }
+        -:  103:    }
+        -:  104:   
+        4:  105:    *(Data+(Config->CRCOffset/8)) = CalculateCrc(Config, State->Counter, Data);
+        -:  106:
+        4:  107:    State->Counter = E2E_UpdateCounter(State->Counter);
+        -:  108:
+        4:  109:    return E2E_E_OK;
+        -:  110:}
+        -:  111:
+        4:  112:uint8 E2E_UpdateCounter(uint8 Counter) {
+        4:  113:    return (Counter+1) % 15; // profile 1 value
+        -:  114:}
+        -:  115:
+        2:  116:static inline uint8 CalculateDeltaCounter(uint8 receivedCounter, uint8 lastValidCounter)
+        -:  117:{
+        2:  118:    if (receivedCounter >= lastValidCounter) {
+        1:  119:        return receivedCounter - lastValidCounter;
+        -:  120:    }
+        -:  121:    else {
+        1:  122:        return MAX_P01_COUNTER_VALUE + 1 + receivedCounter - lastValidCounter;
+        -:  123:    }
+        -:  124:}
+        -:  125:
+        5:  126:Std_ReturnType E2E_P01Check(E2E_P01ConfigType* Config, E2E_P01ReceiverStateType* State, uint8* Data) {
+        -:  127:
+        5:  128:    uint8 receivedCounter = 0;
+        5:  129:    uint8 receivedCrc = 0;
+        5:  130:    uint8 calculatedCrc = 0;
+        5:  131:    uint8 delta = 0;
+        5:  132:    Std_ReturnType returnValue = CheckConfig(Config);
+        -:  133:
+        5:  134:    if (E2E_E_OK != returnValue) {
+        1:  135:        return returnValue;
+        -:  136:    }
+        -:  137:
+        4:  138:    if ((State == NULL) || (Data == NULL)) {
+        1:  139:        return E2E_E_INPUTERR_NULL;
+        -:  140:    }
+        -:  141:
+        3:  142:    if (State->MaxDeltaCounter < MAX_P01_COUNTER_VALUE) {
+        2:  143:        State->MaxDeltaCounter++;
+        -:  144:    }
+        -:  145:
+        3:  146:    if (State->NewDataAvailable == FALSE) {
+        1:  147:        State->Status = E2E_P01STATUS_NONEWDATA;
+        1:  148:        return E2E_E_OK;  
+        -:  149:    }
+        -:  150:
+        2:  151:    if (Config->CounterOffset % 8 == 0) {
+        1:  152:        receivedCounter = *(Data+(Config->CounterOffset/8)) & 0x0F;
+        -:  153:    }
+        -:  154:    else {
+        1:  155:        receivedCounter = (*(Data+(Config->CounterOffset/8)) >> 4) & 0x0F;
+        -:  156:    }
+        -:  157:
+        2:  158:    receivedCrc = *(Data+(Config->CRCOffset/8));
+        2:  159:    calculatedCrc = CalculateCrc(Config, receivedCounter, Data);
+        -:  160:
+        2:  161:    if (receivedCrc != calculatedCrc) {
+        2:  162:        State->Status = E2E_P01STATUS_WRONGCRC;
+        2:  163:        return E2E_E_OK;
+        -:  164:    }
+        -:  165:
+    #####:  166:    if (State->WaitForFirstData == TRUE) {
+    #####:  167:        State->WaitForFirstData = FALSE;
+    #####:  168:        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+    #####:  169:        State->LastValidCounter = receivedCounter;
+    #####:  170:        State->Status= E2E_P01STATUS_INITAL;
+    #####:  171:        return E2E_E_OK;
+        -:  172:    }
+        -:  173:
+    #####:  174:    delta = CalculateDeltaCounter(receivedCounter, State->LastValidCounter);
+        -:  175:
+    #####:  176:    if (delta == 1) {
+    #####:  177:        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+    #####:  178:        State->LastValidCounter = receivedCounter;
+    #####:  179:        State->LostData = 0;
+    #####:  180:        State->Status= E2E_P01STATUS_OK;
+        -:  181:    }
+    #####:  182:    else if (delta == 0) {
+    #####:  183:        State->Status= E2E_P01STATUS_REPEATED;
+        -:  184:    }
+    #####:  185:    else if (delta <= State->MaxDeltaCounter) {
+    #####:  186:        State->MaxDeltaCounter = Config->MaxDeltaCounterInit;
+    #####:  187:        State->LastValidCounter = receivedCounter;
+    #####:  188:        State->LostData = delta - 1;
+    #####:  189:        State->Status= E2E_P01STATUS_OKSOMELOST;
+        -:  190:    }
+        -:  191:    else {
+    #####:  192:        State->Status= E2E_P01STATUS_WRONGSEQUENCE;
+        -:  193:    }
+        -:  194:
+    #####:  195:    return E2E_E_OK;
+        -:  196:}
+        -:  197:
